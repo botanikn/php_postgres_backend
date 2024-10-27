@@ -8,13 +8,13 @@ include 'db.php';
 // Создание подключения к СУБД
 $cn = db_connection();
 
-// Получение текущего URL
+// Получение текущего URI
 $request_uri = $_SERVER['REQUEST_URI'];
 
 // Определение метода обращения
 $method = $_SERVER['REQUEST_METHOD'];
 
-// Обработка GET-запроса на эндпоинте /api/bus_find
+// Обработка GET запроса
 if ($method == 'GET' && strpos($request_uri, '/api/bus_find') !== false) {
     // Запись в переменные ID откуда и куда
     $from = isset($_GET['from']) ? intval($_GET['from']) : null;
@@ -78,7 +78,7 @@ if ($method == 'GET' && strpos($request_uri, '/api/bus_find') !== false) {
 
         $result = pg_query($cn, $query);
         if (!$result) {
-            continue; // Пропускаем, если ошибка в запросе
+            continue;
         }
 
         $current_time = time();
@@ -104,7 +104,7 @@ if ($method == 'GET' && strpos($request_uri, '/api/bus_find') !== false) {
     echo json_encode($response);
 }
 
-// Обработка POST и GET запроса на эндпоинте /api/add_route
+// Обработка POST
 if (($method == 'POST' || $method == 'GET') && strpos($request_uri, '/api/add_route') !== false) {
     // Выделяем из запроса id автобуса, остановки и её порядок в маршруте
     $bus = isset($_GET['bus']) ? intval($_GET['bus']) : null;
@@ -112,7 +112,7 @@ if (($method == 'POST' || $method == 'GET') && strpos($request_uri, '/api/add_ro
     $order = isset($_GET['order']) ? intval($_GET['order']) : null;
 
     if (is_null($bus) || is_null($stop) || is_null($order)) {
-        echo json_encode(["error" => "Параметры 'bus', 'stop' и 'order' обязательны."]);
+        echo json_encode(["error" => "Параметры 'bus', 'stop' и 'order' обязательны"]);
         exit;
     }
 
@@ -125,6 +125,7 @@ if (($method == 'POST' || $method == 'GET') && strpos($request_uri, '/api/add_ro
         exit;
     }
 
+    // Формирование и отправка запроса на получение обновлённой информации
     $select_query = "SELECT bus_name, stop_name, stop_order FROM buses_stops 
                      JOIN stops ON buses_stops.stop_id = stops.id 
                      JOIN buses ON buses_stops.bus_id = buses.id 
@@ -162,10 +163,9 @@ function getNextArrivalTimes($start_time, $interval_minutes, $count) {
     if ($start_timestamp < $current_time) {
         // Считаем, сколько интервалов прошло с начала
         $intervals_passed = floor(($current_time - $start_timestamp) / ($interval_minutes * 60));
-        $start_timestamp += ($intervals_passed + 1) * $interval_minutes * 60; // Переход к следующему времени
+        $start_timestamp += ($intervals_passed + 1) * $interval_minutes * 60;
     }
 
-    // Генерируем следующие три времени
     for ($i = 0; $i < $count; $i++) {
         $arrival_times[] = date('H:i', $start_timestamp + ($i * $interval_minutes * 60));
     }
