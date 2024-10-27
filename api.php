@@ -104,12 +104,12 @@ if ($method == 'GET' && strpos($request_uri, '/api/bus_find') !== false) {
     echo json_encode($response);
 }
 
-// Обработка POST запроса на эндпоинте /api/add_route
-if ($method == 'POST' && strpos($request_uri, '/api/add_route') !== false) {
+// Обработка POST и GET запроса на эндпоинте /api/add_route
+if (($method == 'POST' || $method == 'GET') && strpos($request_uri, '/api/add_route') !== false) {
     // Выделяем из запроса id автобуса, остановки и её порядок в маршруте
-    $bus = isset($_POST['bus']) ? intval($_POST['bus']) : null;
-    $stop = isset($_POST['stop']) ? intval($_POST['stop']) : null;
-    $order = isset($_POST['order']) ? intval($_POST['order']) : null;
+    $bus = isset($_GET['bus']) ? intval($_GET['bus']) : null;
+    $stop = isset($_GET['stop']) ? intval($_GET['stop']) : null;
+    $order = isset($_GET['order']) ? intval($_GET['order']) : null;
 
     if (is_null($bus) || is_null($stop) || is_null($order)) {
         echo json_encode(["error" => "Параметры 'bus', 'stop' и 'order' обязательны."]);
@@ -128,7 +128,7 @@ if ($method == 'POST' && strpos($request_uri, '/api/add_route') !== false) {
     $select_query = "SELECT bus_name, stop_name, stop_order FROM buses_stops 
                      JOIN stops ON buses_stops.stop_id = stops.id 
                      JOIN buses ON buses_stops.bus_id = buses.id 
-                     WHERE bus_id = $bus AND stop_id = $stop";
+                     WHERE bus_id = $bus AND stop_id = $stop AND stop_order = $order";
     $select_result = pg_query($cn, $select_query);
 
     if (!$select_result) {
